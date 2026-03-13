@@ -1,56 +1,64 @@
 package com.qrfraud.backend.service;
 
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
+import com.qrfraud.backend.repository.ScanResultRepository;
+import com.qrfraud.backend.entity.ScanResult;
+
 import java.util.List;
 
 @Service
 public class RiskAnalysisService {
 
-    public int calculateRisk(String qrContent) {
+    private final ScanResultRepository repository;
 
-        int risk = 0;
+    public RiskAnalysisService(ScanResultRepository repository) {
+        this.repository = repository;
+    }
 
-        if (qrContent == null) return 0;
+    public int calculateRisk(String content) {
 
-        String content = qrContent.toLowerCase();
+        int score = 0;
 
-        if (content.contains("refund")) risk += 30;
-        if (content.contains("job")) risk += 25;
-        if (content.contains("offer")) risk += 20;
-        if (content.contains("upi://pay")) risk += 10;
+        if(content.contains("refund") || content.contains("reward"))
+            score += 40;
 
-        return Math.min(risk, 100);
+        if(content.contains("login") || content.contains("verify"))
+            score += 30;
+
+        if(content.contains("upi://"))
+            score += 20;
+
+        return score;
     }
 
     public String riskLevel(int score) {
 
-        if (score < 30) return "LOW";
-        else if (score < 70) return "MEDIUM";
-        else return "HIGH";
+        if(score >= 70) return "HIGH";
+        if(score >= 40) return "MEDIUM";
+        return "LOW";
     }
 
-    // 👇 THIS MUST BE INSIDE THE CLASS
-    public List<String> generateReasons(String qrContent) {
-
-        List<String> reasons = new ArrayList<>();
-
-        if(qrContent == null) return reasons;
-
-        String content = qrContent.toLowerCase();
+    public List<String> generateReasons(String content) {
 
         if(content.contains("refund"))
-            reasons.add("Contains refund keyword");
+            return List.of("Suspicious refund scam detected");
 
-        if(content.contains("job"))
-            reasons.add("Contains job scam keyword");
+        if(content.contains("login"))
+            return List.of("Phishing login detected");
 
-        if(content.contains("offer"))
-            reasons.add("Contains suspicious offer");
+        return List.of("No major threats detected");
+    }
 
-        if(content.contains("upi://pay"))
-            reasons.add("UPI payment detected");
+    public void saveScan(String qrContent, int score, String level, List<String> reasons, String imagePath){
 
-        return reasons;
+        ScanResult result = new ScanResult(
+                qrContent,
+                score,
+                level,
+                String.join(", ", reasons),
+                imagePath
+        );
+
+        repository.save(result);
     }
 }
