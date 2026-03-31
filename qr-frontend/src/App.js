@@ -1,18 +1,24 @@
-
-
 import { useState, useRef } from "react";
 import "./App.css";
+import Gauge from "./components/Gauge";
 
 export default function App() {
 
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [result, setResult] = useState(null);
   const [decoded, setDecoded] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+  // const [originalResult, setOriginalResult] = useState(null);
+  const [language, setLanguage] = useState("en");
 
   const fileInputRef = useRef(null);
+//   useEffect(() => {
+//   if (file) {
+//     uploadImage();   // 🔥 re-call API when language changes
+//   }
+// }, [language, file]);
 
   const handleFileChange = (e) => {
 
@@ -45,7 +51,9 @@ export default function App() {
     setError(null);
 
     const formData = new FormData();
+    // formData.append("file", file);
     formData.append("file", file);
+formData.append("language", language);
 
     try {
 
@@ -57,9 +65,14 @@ export default function App() {
       if (!response.ok) throw new Error("Server error");
 
       const data = await response.json();
+       console.log("API response:", data); // optional debug
 
       setDecoded(data.decoded_data);
-      setResult(data.analysis);
+      // setResult(data);
+      setResult({
+  ...data,
+  originalReasons: data.reasons   // ✅ store English version
+});
 
     } catch (err) {
 
@@ -97,7 +110,7 @@ export default function App() {
       </div>
 
 
-      {/* Main Card */}
+      {/* Upload Card */}
 
       <div className="card">
 
@@ -155,22 +168,15 @@ export default function App() {
         </div>
 
 
-        {/* Error */}
-
         {error && (
 
           <div className="error-box">
-
             <div className="error-icon">!</div>
-
             {error}
-
           </div>
 
         )}
 
-
-        {/* Button */}
 
         <button
           className={`scan-btn ${!file ? "idle" : ""}`}
@@ -193,20 +199,40 @@ export default function App() {
         </button>
 
       </div>
+      <div className="lang-toggle">
+
+  <button
+    className={`lang-btn ${language === "en" ? "active" : ""}`}
+    onClick={() => setLanguage("en")}
+  >
+    English
+  </button>
+
+  <button
+    className={`lang-btn ${language === "ta" ? "active" : ""}`}
+    onClick={() => setLanguage("ta")}
+  >
+    தமிழ்
+  </button>
+
+  <button
+    className={`lang-btn ${language === "hi" ? "active" : ""}`}
+    onClick={() => setLanguage("hi")}
+  >
+    हिंदी
+  </button>
+
+</div>
 
 
-      {/* Result */}
+      {/* RESULT */}
 
       {result && (
 
         <div className="result-card">
 
           <div className="result-header">
-
-            <div>
-              <span className="label-mono">Analysis Result</span>
-            </div>
-
+            <span className="label-mono">Analysis Result</span>
           </div>
 
 
@@ -228,96 +254,74 @@ export default function App() {
           {/* Risk Score */}
 
           <div className="risk-meter">
-
-            <div className="risk-meter-header">
-
-              <span className="label-mono">Risk Score</span>
-
-              <span className="risk-score-value">
-                {result.risk_score}
-              </span>
-
-            </div>
-
-            <div className="meter-track">
-
-              <div
-                className="meter-fill"
-                style={{
-                  width: `${result.risk_score}%`,
-                  background:
-                    result.risk_score > 70
-                      ? "var(--red)"
-                      : result.risk_score > 40
-                      ? "var(--amber)"
-                      : "var(--green)"
-                }}
-              />
-
-            </div>
-
-          </div>
+  <span className="label-mono">Risk Score</span>
+  <Gauge score={result.riskScore} />
+</div>
 
 
           {/* Detection Details */}
 
-          {result.explanations && (
+          {result.reasons && (
 
-            <div className="threats-section">
+  <div className="threats-section">
 
-              <div className="threats-header">
+    <div className="threats-header">
+      <span className="label-mono">Detection Details</span>
+      <span className="threat-count">
+        {result.reasons.length}
+      </span>
+    </div>
 
-                <span className="label-mono">
-                  Detection Details
-                </span>
+    <ul className="threats-list">
 
-                <span className="threat-count">
-                  {result.explanations.length}
-                </span>
+      {result.reasons.map((reason, i) => (
 
-              </div>
+        <li key={i} className="threat-item">
 
-              <ul className="threats-list">
+          <div className="threat-index">
+            #{i + 1}
+          </div>
 
-                {result.explanations.map((e, i) => (
+          <div className="threat-content">
 
-                  <li key={i} className="threat-item">
-
-                    <div className="threat-index">
-                      #{i + 1}
-                    </div>
-
-                    <div className="threat-content">
-
-                      <div className="threat-module">
-                        {e.module}
-                      </div>
-
-                      <div className="threat-reason">
-                        {e.reason}
-                      </div>
-
-                    </div>
-
-                  </li>
-
-                ))}
-
-              </ul>
-
+            <div className="threat-module">
+              Detector
             </div>
 
-          )}
+            <div className="threat-reason">
+              {reason}   {/* ✅ Tamil/Hindi will show */}
+            </div>
+
+          </div>
+
+        </li>
+
+      ))}
+
+    </ul>
+
+  </div>
+
+)}
 
         </div>
 
       )}
+      <div style={{ marginBottom: "10px" }}>
+  <b>Language:</b> {language.toUpperCase()}
+</div>
+
 
       <div className="page-footer">
         QR FRAUD INTELLIGENCE SYSTEM
       </div>
 
+
     </div>
 
   );
 }
+
+
+
+

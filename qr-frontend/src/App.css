@@ -569,3 +569,157 @@ body {
   .card, .result-card { padding: 18px; }
   .title { font-size: 1.55rem; }
 }
+/* 🌐 Language Toggle Container */
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.6);
+}
+
+/* Buttons */
+.lang-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.lang-btn:hover {
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5f5;
+}
+
+/* Active */
+.lang-btn.active {
+  background: #1e293b;
+  color: #ffffff;
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+/* Optional spacing */
+.lang-toggle button + button {
+  border-left: 1px solid #1e293b;
+}
+/* ================= TESLA GAUGE ================= */
+
+.gauge-wrapper {
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Outer glow */
+.gauge {
+  position: relative;
+  width: 260px;
+  height: 130px;
+  margin: auto;
+  border-top-left-radius: 260px;
+  border-top-right-radius: 260px;
+
+  background: conic-gradient(
+    #22c55e 0deg 60deg,
+    #facc15 60deg 120deg,
+    #ef4444 120deg 180deg
+  );
+
+  box-shadow:
+    0 0 40px rgba(34, 197, 94, 0.1),
+    0 0 60px rgba(239, 68, 68, 0.08);
+
+  overflow: hidden;
+}
+
+/* Inner mask */
+.gauge::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 110px;
+  background: #020617;
+  border-top-left-radius: 220px;
+  border-top-right-radius: 220px;
+}
+
+/* Glow ring */
+.gauge-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.15);
+}
+
+/* Needle */
+.gauge-needle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  height: 115px;
+  background: linear-gradient(to top, #fff, #94a3b8);
+  transform-origin: bottom center;
+  transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+  z-index: 3;
+}
+
+/* Center */
+.gauge-center {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  z-index: 4;
+}
+
+/* Labels */
+.gauge-label-low {
+  position: absolute;
+  left: 20px;
+  bottom: 10px;
+  font-size: 10px;
+  color: #22c55e;
+}
+
+.gauge-label-mid {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #facc15;
+}
+
+.gauge-label-high {
+  position: absolute;
+  right: 20px;
+  bottom: 10px;
+  font-size: 10px;
+  color: #ef4444;
+}
+
+/* Value */
+.gauge-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+/* Status */
+.gauge-status {
+  font-size: 13px;
+  color: #94a3b8;
+}
