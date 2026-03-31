@@ -1,5 +1,8 @@
 fastapi
 uvicorn
 transformers
-sentencepiece
 torch
+sentencepiece
+tokenizers
+protobuf
+pydantic
