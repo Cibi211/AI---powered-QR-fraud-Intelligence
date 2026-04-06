@@ -224,12 +224,20 @@ from deep_translator import GoogleTranslator
 
 def translate_text(text, lang):
 
+    # lang_map = {
+    #     "en": "en",
+    #     "ta": "ta",
+    #     "tamil": "ta",
+    #     "hi": "hi",
+    #     "hindi": "hi"
+    # }
     lang_map = {
         "en": "en",
         "ta": "ta",
-        "tamil": "ta",
         "hi": "hi",
-        "hindi": "hi"
+        "te": "te",   # Telugu
+        "kn": "kn",   # Kannada
+        "ml": "ml"    # Malayalam
     }
 
     target = lang_map.get(lang.lower(), "en")
@@ -251,22 +259,44 @@ def translate_response(result, lang):
         exp["reason"] = translate_text(exp["reason"], lang)
         exp["module"] = translate_text(exp["module"], lang)
 
-    risk_map = {
-        "ta": {
-            "HIGH": "அதிக அபாயம்",
-            "MEDIUM": "மிதமான அபாயம்",
-            "LOW": "குறைந்த அபாயம்"
-        },
-        "hi": {
-            "HIGH": "उच्च जोखिम",
-            "MEDIUM": "मध्यम जोखिम",
-            "LOW": "कम जोखिम"
-        }
-    }
-    if "feature_importance" in exp:
+        if "feature_importance" in exp:
             exp["feature_importance"] = [
                 translate_text(f, lang) for f in exp["feature_importance"]
-            ]
+    ]
+
+    risk_map = {
+        
+            "ta": {
+                "HIGH": "அதிக அபாயம்",
+                "MEDIUM": "மிதமான அபாயம்",
+                "LOW": "குறைந்த அபாயம்"
+            },
+            "hi": {
+                "HIGH": "उच्च जोखिम",
+                "MEDIUM": "मध्यम जोखिम",
+                "LOW": "कम जोखिम"
+            },
+            "te": {
+                "HIGH": "అధిక ప్రమాదం",
+                "MEDIUM": "మధ్యస్థ ప్రమాదం",
+                "LOW": "తక్కువ ప్రమాదం"
+            },
+            "kn": {
+                "HIGH": "ಹೆಚ್ಚಿನ ಅಪಾಯ",
+                "MEDIUM": "ಮಧ್ಯಮ ಅಪಾಯ",
+                "LOW": "ಕಡಿಮೆ ಅಪಾಯ"
+            },
+            "ml": {
+                "HIGH": "ഉയർന്ന അപകടം",
+                "MEDIUM": "മിതമായ അപകടം",
+                "LOW": "കുറഞ്ഞ അപകടം"
+            }
+
+        }
+    # if "feature_importance" in exp:
+    #         exp["feature_importance"] = [
+    #             translate_text(f, lang) for f in exp["feature_importance"]
+    #         ]
 
     key = lang.lower()
 
@@ -280,6 +310,7 @@ def translate_response(result, lang):
 
 def analyze_qr_data(data, language="en"):
     print("LANG IN ANALYZER:", language)
+    
 
     risk_score = 0
     explanations = []
@@ -292,8 +323,53 @@ def analyze_qr_data(data, language="en"):
     if not data.startswith(("http://", "https://", "upi://")):
         data = "http://" + data
 
+    # ext = tldextract.extract(data)
+    # domain = ext.domain + "." + ext.suffix
     ext = tldextract.extract(data)
     domain = ext.domain + "." + ext.suffix
+
+    # --------------------------
+    # 🔥 ADD HERE (IMPORTANT)
+    # Suspicious domain heuristic
+    # --------------------------
+    SUSPICIOUS_WORDS = [
+        "login", "secure", "verify", "account", "update",
+        "bank", "payment", "free", "offer", "win"
+    ]
+
+    matches = sum(word in data.lower() for word in SUSPICIOUS_WORDS)
+
+    risk_score += matches * 10   # each keyword adds score
+
+    if matches > 0:
+        explanations.append({
+            "module": "Heuristic Detector",
+            "reason": f"{matches} suspicious keyword(s) found in URL"
+        })
+
+    # --------------------------
+    # 🔥 ADD HERE
+    # Unknown domain risk
+    # --------------------------
+    TRUSTED_DOMAINS = [
+        "google.com", "youtube.com", "amazon.in",
+        "microsoft.com", "apple.com", "github.com"
+    ]
+
+    if domain not in TRUSTED_DOMAINS:
+        domain_length = len(domain)
+
+        if domain_length > 15:
+            risk_score += 15
+        elif domain_length > 10:
+            risk_score += 10
+        else:
+            risk_score += 5
+
+        explanations.append({
+            "module": "Domain Analysis",
+            "reason": f"Domain length is {domain_length}, which may indicate risk"
+        })
 
     # --------------------------
     # Homograph detection
@@ -362,11 +438,23 @@ def analyze_qr_data(data, language="en"):
     # HTTP security check
     # --------------------------
     if data.startswith("http://"):
-        risk_score += 10
+        risk_score += 20
         explanations.append({
             "module": "Security Check",
             "reason": "URL uses insecure HTTP"
         })
+
+    # --------------------------
+# URL complexity
+# --------------------------
+    url_length = len(data)
+
+    if url_length > 75:
+        risk_score += 15
+    elif url_length > 50:
+        risk_score += 10
+    elif url_length > 30:
+        risk_score += 5
 
     
 
@@ -386,16 +474,24 @@ def analyze_qr_data(data, language="en"):
    
     ml_flag, prob, shap_exp = predict_phishing(data)
 
-    if ml_flag:
 
-        risk_score += 30
-        
+# Dynamic scoring instead of fixed 30
+    ml_score = int(prob * 25)
+    risk_score += ml_score
 
+    # 🔥 prevent normal URLs becoming HIGH
+    if prob < 0.6:
+        risk_score -= 30
+
+    if prob > 0.4:
         explanations.append({
             "module": "ML Phishing Model",
             "reason": f"Predicted phishing with probability {prob:.2f}",
             "feature_importance": shap_exp
-        })
+    })
+        
+    print("FINAL SCORE:", risk_score)
+    print("EXPLANATIONS:", explanations)
 
     # --------------------------
     # Final risk calculation
