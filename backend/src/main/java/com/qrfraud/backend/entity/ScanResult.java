@@ -137,6 +137,7 @@ public class ScanResult {
     public void setScannedAt(LocalDateTime scannedAt) {
         this.scannedAt = scannedAt;
     }
+   
 
     
 }

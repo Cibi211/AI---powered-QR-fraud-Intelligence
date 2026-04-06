@@ -122,11 +122,14 @@ public ScanResponse uploadImage(
                 restTemplate.postForEntity(pythonUrl, requestEntity, Map.class);
 
         Map<String, Object> responseBody = response.getBody();
+        // String decoded = (String) responseBody.get("decoded_data");
+        
         Map<String, Object> analysis =
                 (Map<String, Object>) responseBody.get("analysis");
 
         int score = (int) analysis.get("risk_score");
         String level = (String) analysis.get("risk_level");
+        
 
         List<Map<String, Object>> explanations =
                 (List<Map<String, Object>>) analysis.get("explanations");

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef,useEffect } from "react";
 import "./App.css";
 import Gauge from "./components/Gauge";
 
@@ -12,13 +12,16 @@ export default function App() {
   const [result, setResult] = useState(null);
   // const [originalResult, setOriginalResult] = useState(null);
   const [language, setLanguage] = useState("en");
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("qr-theme") || "dark";
+  });
 
   const fileInputRef = useRef(null);
-//   useEffect(() => {
-//   if (file) {
-//     uploadImage();   // 🔥 re-call API when language changes
-//   }
-// }, [language, file]);
+  useEffect(() => {
+  if (file) {
+    uploadImage();   // 🔥 re-call API when language changes
+  }
+}, [language, file]);
 
   const handleFileChange = (e) => {
 
@@ -85,10 +88,32 @@ formData.append("language", language);
 
     }
   };
-
+useEffect(() => {
+    // Apply class to <html> so CSS variables cascade everywhere
+    document.documentElement.className = theme;
+    localStorage.setItem("qr-theme", theme);
+  }, [theme]);
   return (
 
     <div className="page">
+      <div className="theme-toggle">
+      <div className="theme-switch">
+        <button
+          className={`theme-switch-option ${theme === "dark" ? "active" : ""}`}
+          onClick={() => setTheme("dark")}
+          aria-label="Dark mode"
+        >
+          🌙 Dark
+        </button>
+        <button
+          className={`theme-switch-option ${theme === "light" ? "active" : ""}`}
+          onClick={() => setTheme("light")}
+          aria-label="Light mode"
+        >
+          ☀️ Light
+        </button>
+      </div>
+    </div>
 
       {/* Header */}
 
@@ -221,6 +246,28 @@ formData.append("language", language);
   >
     हिंदी
   </button>
+  <button
+  className={`lang-btn ${language === "te" ? "active" : ""}`}
+  onClick={() => setLanguage("te")}
+>
+  తెలుగు
+</button>
+
+<button
+  className={`lang-btn ${language === "kn" ? "active" : ""}`}
+  onClick={() => setLanguage("kn")}
+>
+  ಕನ್ನಡ
+</button>
+
+<button
+  className={`lang-btn ${language === "ml" ? "active" : ""}`}
+  onClick={() => setLanguage("ml")}
+>
+  മലയാളം
+</button>
+
+
 
 </div>
 
@@ -321,7 +368,6 @@ formData.append("language", language);
 
   );
 }
-
 
 
 
