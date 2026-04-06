@@ -90,8 +90,3 @@ async def scan_and_analyze(
     }
     print("LANG:", language)
 
-#         )
-
-#         results[name] = tokenizer.decode(output[0], skip_special_tokens=True)
-
-#     return results
